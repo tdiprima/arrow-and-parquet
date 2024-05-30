@@ -2,4 +2,4 @@
 .vscode/
 .idea/
 node_modules/
-arrow/Data/chicago-crimes-*
+arrow/data/chicago-crimes-*
