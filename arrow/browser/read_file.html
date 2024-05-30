@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Arrow.js browser test</title>
+  <!-- https://github.com/apache/arrow/blob/main/js/examples/read_file.html -->
+  <meta charset="utf-8">
+  <style>
+    table {
+      border-collapse: collapse;
+    }
+
+    table, th, td {
+      border: 1px solid black;
+      white-space: nowrap;
+    }
+  </style>
+
+</head>
+<body>
+<script src="https://cdn.jsdelivr.net/npm/apache-arrow"></script>
+<h3>See console --></h3>
+<input id="arrow-in" onchange="handleFiles(this.files)" type="file"/>
+<table>
+  <thead id="thead">
+  </thead>
+  <tbody id="tbody">
+  </tbody>
+</table>
+
+<script>
+  let reader = new FileReader();
+
+  function addCell(tr, type, value) {
+    let td = document.createElement(type)
+    td.textContent = value;
+    tr.appendChild(td);
+  }
+
+  reader.onload = function (evt) {
+    // let arrowTable = Arrow.tableFromIPC([new Uint8Array(evt.target.result)]);
+    let arrowTable = Arrow.tableFromIPC(evt.target.result);
+    let thead = document.getElementById("thead");
+    let tbody = document.getElementById("tbody");
+
+    while (thead.hasChildNodes()) {
+      thead.removeChild(thead.lastChild);
+    }
+
+    while (tbody.hasChildNodes()) {
+      tbody.removeChild(tbody.lastChild);
+    }
+
+    let header_row = document.createElement("tr");
+    for (let field of arrowTable.schema.fields) {
+      addCell(header_row, "th", `${field}`);
+    }
+
+    thead.appendChild(header_row);
+
+    for (let row of arrowTable) {
+      let tr = document.createElement("tr");
+      for (let cell of row) {
+        addCell(tr, "td",
+          cell == null ? 'null'
+            : !Array.isArray(cell) ? cell
+              : '[' + cell.map((value) => value == null ? 'null' : value).join(', ') + ']'
+        );
+      }
+      tbody.appendChild(tr);
+    }
+
+    // Iterate through values in a column
+    let colName = "column1";
+    let columnData = arrowTable.getChild(colName);
+    // OR:
+    // Find the index of the column "column1"
+    // let columnIndex = arrowTable.schema.fields.findIndex(field => field.name === colName);
+    // Access the column's data (Vector)
+    // let columnData = arrowTable.getChildAt(columnIndex);
+
+    if (columnData) {
+      // Iterate over each element in the column
+      for (let i = 0; i < columnData.length; i++) {
+        let value = columnData.get(i);
+        console.log(value); // Process the value as needed
+      }
+    } else {
+      console.log(`Column '${colName}' not found.`);
+    }
+
+    // Searching for a Specific Value
+    let columnIndex = arrowTable.schema.fields.findIndex(field => field.name === "column1");
+    let searchValue = 'Hello';
+    // let foundRows = [];
+    let count = 0;
+
+    for (let row of arrowTable) {
+      if (row.toArray()[columnIndex] === searchValue) {
+        // foundRows.push(row);
+        count++;
+      }
+    }
+
+    console.log(`Found ${count} rows.`)
+    // console.log(foundRows); // Rows where 'columnName' has 'yourSearchValue'
+  }
+
+  function handleFiles(files) {
+    reader.readAsArrayBuffer(files[0]);
+  }
+</script>
+</body>
+</html>

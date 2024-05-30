@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Read Apache Arrow File</title>
+  <!-- Include the Apache Arrow JavaScript library -->
+  <script src="https://cdn.jsdelivr.net/npm/apache-arrow"></script>
+  <!-- <script src="https://unpkg.com/apache-arrow"></script> -->
+</head>
+<body>
+<h1>Apache Arrow File Reader</h1>
+<div id="output"></div>
+
+<script>
+  async function loadArrowFile(url) {
+    try {
+      // Fetch the Arrow file
+      const response = await fetch(url);
+      const arrayBuffer = await response.arrayBuffer();
+
+      // Read the Arrow file
+      const arrowTable = Arrow.tableFromIPC(new Uint8Array(arrayBuffer));
+
+      // Process the data (example)
+      console.log(arrowTable.toString());
+      displayData(arrowTable);
+
+      // Additional processing can be done here
+    } catch (error) {
+      console.error('Error loading Arrow file:', error);
+      document.getElementById('output').innerText = 'Error loading the file.';
+    }
+  }
+
+  function displayData(table) {
+    // Here you can process and display your data
+    // For example, just printing the first row
+    const firstRow = table.get(0);
+    document.getElementById('output').innerText = firstRow;
+  }
+
+  // URL of the Apache Arrow file
+  const arrowFileUrl = 'hello_world.arrow';
+
+  // Load the Arrow file
+  loadArrowFile(arrowFileUrl);
+</script>
+</body>
+</html>
